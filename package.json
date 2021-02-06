@@ -1,0 +1,16 @@
+{
+    "name": "com.skibitsky.urx",
+    "version": "0.0.0",
+    "displayName": "Unity Reactive Extensions",
+    "description": "Unity Reactive Extensions",
+    "repository": "skibitsky/urx",
+    "author": {
+      "name": "Gleb Skibitsky",
+      "email": "gleb@skibitsky.com",
+      "url": "https://skibitsky.com"
+    },
+    "unity": "",
+    "license": "MIT",
+    "dependencies": {
+    }
+  }
