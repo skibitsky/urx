@@ -1,0 +1,9 @@
+{
+  "name": "Skibitsky.Urx.Runtime.Tests",
+  "references": [
+    "Skibitsky.Urx"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
