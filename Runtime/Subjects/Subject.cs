@@ -2,14 +2,14 @@ using System;
 
 namespace Skibitsky.Urx
 {
-    public sealed class Subject<T> : SubjectBase<T>
+    public sealed class Subject<T> : ISubject<T>
     {
         private Subscription[] _subscriptions;
         private bool _disposed;
         
         private readonly object _locker = new object();
         
-        public override void OnCompleted()
+        public void OnCompleted()
         {
             ThrowIfDisposed();
             
@@ -20,7 +20,7 @@ namespace Skibitsky.Urx
             }
         }
 
-        public override void OnError(Exception error)
+        public void OnError(Exception error)
         {
             if (error == null) throw new ArgumentNullException(nameof(error));
             
@@ -33,18 +33,16 @@ namespace Skibitsky.Urx
             }
         }
 
-        public override void OnNext(T value)
+        public void OnNext(T value)
         {
-            ThrowIfDisposed();
-
             lock (_locker)
             {
-                foreach (var subscription in _subscriptions)
-                    subscription.Observer.OnNext(value);
+                for (var i = 0; i < _subscriptions.Length; i++)
+                    _subscriptions[i].Observer.OnNext(value);
             }
         }
 
-        public override IDisposable Subscribe(IObserver<T> observer)
+        public IDisposable Subscribe(IObserver<T> observer)
         {
             if (observer == null) throw new ArgumentNullException(nameof(observer));
 
@@ -61,14 +59,12 @@ namespace Skibitsky.Urx
                 
                 newArray[l] = subject;
                 _subscriptions = newArray;
-                
-                observer.OnCompleted();
-                
+
                 return subject;
             }
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             lock (_locker)
             {
