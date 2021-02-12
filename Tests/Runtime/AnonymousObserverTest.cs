@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace Skibitsky.Urx.Tests
 {
     [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
-    public class AnonymousObserverTest<T>
+    public class AnonymousObserverTest
     {
         [Test]
         public void AnonymousObserver_Null_ShouldThrowArgumentNullException()
@@ -18,7 +18,39 @@ namespace Skibitsky.Urx.Tests
         }
     }
 
-    public class AnonymousObserverOnNextTest
+    public abstract class AnonymousObserverTestBase
+    {
+        [TestCase(0)]
+        [TestCase(4)]
+        public void OnNext_IntSequence(int onNextCallsCount)
+        {
+            var results = new List<int>();
+            
+            var observer = GetObserverInstance<int>(results.Add);
+
+            for (var i = 0; i < onNextCallsCount; i++)
+                observer.OnNext(onNextCallsCount - i);
+            
+            Assert.That(results, Has.Count.EqualTo(onNextCallsCount));
+            Assert.That(results, Is.Ordered.Descending);
+        }
+        
+        [Test]
+        public void OnNext_ThrowException_ShouldThrowException()
+        {
+            const string exceptionMsg = "Oops!";
+            static void ThrowException(string msg) => throw new Exception(msg);
+            
+            var observer = GetObserverInstance<string>(ThrowException);
+
+            var ex = Assert.Throws<Exception>(() => observer.OnNext(exceptionMsg));
+            Assert.That(ex.Message, Is.EqualTo(exceptionMsg));
+        }
+        
+        protected abstract IObserver<T> GetObserverInstance<T>(Action<T> onNext);
+    }
+
+    public class AnonymousObserverOnNextTest : AnonymousObserverTestBase
     {
         [Test]
         public void AnonymousObserverOnNext_Implements_IObserver()
@@ -36,35 +68,7 @@ namespace Skibitsky.Urx.Tests
         public void OnError_TestException_ShouldThrowTestException()
         {
             var observer = CreateEmpty();
-            Assert.Throws<AnonymousObserverOnNext_TestException>(() => observer.OnError(new AnonymousObserverOnNext_TestException()));
-        }
-
-        [Test]
-        public void OnNext_IntSequence()
-        {
-            var results = new List<int>();
-            const int expectedCount = 3;
-            
-            var observer = new AnonymousObserverOnNext<int>(results.Add);
-
-            observer.OnNext(2);
-            observer.OnNext(1);
-            observer.OnNext(0);
-
-            Assert.That(results, Has.Count.EqualTo(expectedCount));
-            Assert.That(results, Is.Ordered.Descending);
-        }
-
-        [Test]
-        public void OnNext_ThrowTextException_ShouldThrowTestException()
-        {
-            const string expectedMsg = "Oops!";
-            static void ThrowTestException(string msg) => throw new AnonymousObserverOnNext_TestException(msg);
-            
-            var observer = new AnonymousObserverOnNext<string>(ThrowTestException);
-
-            var ex = Assert.Throws<AnonymousObserverOnNext_TestException>(() => observer.OnNext(expectedMsg));
-            Assert.That(ex.Message, Is.EqualTo(expectedMsg));
+            Assert.Throws<Exception>(() => observer.OnError(new Exception()));
         }
 
         [Test]
@@ -74,19 +78,15 @@ namespace Skibitsky.Urx.Tests
             
             Assert.DoesNotThrow(() => observer.OnCompleted());
         }
+        
+        protected override IObserver<T> GetObserverInstance<T>(Action<T> onNext) =>
+            new AnonymousObserverOnNext<T>(onNext);
 
         private static AnonymousObserverOnNext<object> CreateEmpty() =>
             new AnonymousObserverOnNext<object>(_ => { });
-        
-        // ReSharper disable once InconsistentNaming
-        private class AnonymousObserverOnNext_TestException : Exception
-        {
-            public AnonymousObserverOnNext_TestException() { }
-            public AnonymousObserverOnNext_TestException(string msg) : base(msg) { }
-        }
     }
 
-    public class AnonymousObserverOnNextOnErrorTest
+    public class AnonymousObserverOnNextOnErrorTest : AnonymousObserverTestBase
     {
         [Test]
         public void AnonymousObserverOnNextOnError_Implements_AnonymousObserverOnNext()
@@ -98,31 +98,44 @@ namespace Skibitsky.Urx.Tests
 
             Assert.That(observer, Is.AssignableTo<AnonymousObserverOnNext<object>>());
         }
+
+        [Test]
+        public void OnError_ThrowException_ShouldThrowException()
+        {
+            const string exceptionMsg = "Oops!";
+            var observer = new AnonymousObserverOnNextOnError<int>(_ => { }, e => throw e);
+            
+            var ex = Assert.Throws<Exception>(() => observer.OnError(new Exception(exceptionMsg)));
+            Assert.That(ex.Message, Is.EqualTo(exceptionMsg));
+        }
         
         [Test]
-        public void OnNext_IntSequence()
+        public void OnError_Delegate_ShouldInvokeDelegate()
         {
-            var results = new List<int>();
-            const int expectedCount = 3;
+            const int initialValue = 7;
+            const int newValue = 2;
             
-            var observer = new AnonymousObserverOnNextOnError<int>(results.Add, e => {});
+            var handle = (object) initialValue;
+            void ChangeHandleValue (Exception ex) => handle =  newValue;
+            var observer = new AnonymousObserverOnNextOnError<int>(_ => { }, ChangeHandleValue);
 
-            observer.OnNext(2);
-            observer.OnNext(1);
-            observer.OnNext(0);
-
-            Assert.That(results, Has.Count.EqualTo(expectedCount));
-            Assert.That(results, Is.Ordered.Descending);
+            observer.OnError(new Exception());
+            
+            Assert.That((int)handle, Is.EqualTo(newValue));
         }
+        
+        [Test]
+        public void OnCompleted_Empty_ShouldNotThrow()
+        {
+            var observer = CreateEmpty();
+            
+            Assert.DoesNotThrow(() => observer.OnCompleted());
+        }
+        
+        protected override IObserver<T> GetObserverInstance<T>(Action<T> onNext) =>
+            new AnonymousObserverOnNextOnError<T>(onNext, _ => { });
 
         private static AnonymousObserverOnNextOnError<object> CreateEmpty() =>
             new AnonymousObserverOnNextOnError<object>(_ => { }, _ => { });
-
-        // ReSharper disable once InconsistentNaming
-        private class AnonymousObserverOnNextOnError_TestException : Exception
-        {
-            public AnonymousObserverOnNextOnError_TestException() { }
-            public AnonymousObserverOnNextOnError_TestException(string msg) : base(msg) { }
-        }
     }
 }
