@@ -4,8 +4,9 @@ namespace Skibitsky.Urx
 {
     public sealed class Subject<T> : ISubject<T>
     {
-        private Subscription[] _subscriptions;
+        private Subscription[] _subscriptions = Array.Empty<Subscription>();
         private bool _disposed;
+        private bool _terminated;
         
         private readonly object _locker = new object();
         
@@ -17,6 +18,8 @@ namespace Skibitsky.Urx
             {
                 foreach (var subscription in _subscriptions)
                     subscription.Observer.OnCompleted();
+                
+                _terminated = true;
             }
         }
 
@@ -30,6 +33,8 @@ namespace Skibitsky.Urx
             {
                 foreach (var subscription in _subscriptions)
                     subscription.Observer.OnError(error);
+                
+                _terminated = true;
             }
         }
 
@@ -37,6 +42,8 @@ namespace Skibitsky.Urx
         {
             lock (_locker)
             {
+                if (_terminated) return;
+                
                 for (var i = 0; i < _subscriptions.Length; i++)
                     _subscriptions[i].Observer.OnNext(value);
             }
@@ -86,12 +93,12 @@ namespace Skibitsky.Urx
             lock (_locker)
             {
                 var i = Array.IndexOf(_subscriptions, subscription);
+                if (i < 0) return;
+                
                 var l = _subscriptions.Length;
 
-                if (i < 0) return;
-
                 Subscription[] newArray;
-                if (i == 1) newArray = Array.Empty<Subscription>();
+                if (i == 0) newArray = Array.Empty<Subscription>();
                 else
                 {
                     newArray = new Subscription[l - 1];
