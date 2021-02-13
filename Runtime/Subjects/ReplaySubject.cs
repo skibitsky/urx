@@ -11,21 +11,21 @@ namespace Skibitsky.Urx
         private readonly Action<T> _add;
         private readonly Action? _trim; 
         
-        public ReplaySubject(uint bufferSize)
+        public ReplaySubject(int bufferSize)
         {
-            if (bufferSize == 0) throw new ArgumentException("Buffer size cannot be 0");
+            if (bufferSize <= 0) throw new ArgumentException("Buffer size cannot be equal to or less than 0");
             
             _subject = new Subject<T>();
 
             (_replay, _add, _trim) = bufferSize switch
             {
                 1 => CreateReplayOnce(),
-                uint.MaxValue => CreateReplayAll(),
+                int.MaxValue => CreateReplayAll(),
                 _ => CreateReplayMany(bufferSize)
             };
         }
 
-        private static (Action<IObserver<T>>, Action<T>, Action) CreateReplayMany(uint bufferSize)
+        private static (Action<IObserver<T>>, Action<T>, Action) CreateReplayMany(int bufferSize)
         {
             var replay = new ReplayMany(bufferSize);
             return (replay.Replay, replay.Add, replay.Trim);
@@ -67,10 +67,10 @@ namespace Skibitsky.Urx
 
         private sealed class ReplayMany
         {
-            private readonly uint _bufferSize;
+            private readonly int _bufferSize;
             private readonly Queue<T> _queue = new Queue<T>();
 
-            public ReplayMany(uint bufferSize)
+            public ReplayMany(int bufferSize)
             {
                 _bufferSize = bufferSize;
             }
@@ -97,15 +97,20 @@ namespace Skibitsky.Urx
         private sealed class ReplayOnce
         {
             private T _value;
+            private bool _hasValue;
             
             public void Add(T value)
             {
                 if (value == null) throw new ArgumentNullException(nameof(value));
                 
                 _value = value;
+                _hasValue = true;
             }
 
-            public void Replay(IObserver<T> observer) => observer.OnNext(_value);
+            public void Replay(IObserver<T> observer)
+            {
+                if (_hasValue) observer.OnNext(_value);
+            }
         }
 
         private sealed class ReplayAll
