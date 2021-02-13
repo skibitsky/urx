@@ -1,52 +1,48 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace Skibitsky.Urx.Tests
 {
-    public class SubjectTests
+    public class SubjectTestBase
     {
-        [Test]
-        public void OnCompleted()
+        protected static void TestOnCompleted(ISubject<int> subject)
         {
             var onNext = new List<int>();
             var exceptions = new List<Exception>();
             var onCompletedCallCount = 0;
-            var subject = new Subject<int>();
-            
+
             subject.Subscribe(x => onNext.Add(x), x => exceptions.Add(x), () => onCompletedCallCount++);
             
-            subject.OnNext(0);
+            subject.OnNext(1);
             subject.OnNext(10);
             subject.OnNext(100);
-            Assert.That(onNext, Is.EqualTo(new List<int>{0,10,100}));
+            Assert.That(onNext, Is.EqualTo(new List<int>{1,10,100}));
             Assert.That(exceptions, Has.Count.EqualTo(0));
             Assert.That(onCompletedCallCount, Is.EqualTo(0));
 
             subject.OnCompleted();
             Assert.That(onCompletedCallCount, Is.EqualTo(1));
             
-            subject.OnNext(0);
+            subject.OnNext(1);
             subject.OnNext(10);
             subject.OnNext(200);
-            Assert.That(onNext, Is.EqualTo(new List<int>{0,10,100}));
+            Assert.That(onNext, Is.EqualTo(new List<int>{1,10,100}));
             Assert.That(exceptions, Has.Count.EqualTo(0));
         }
 
-        [Test]
-        public void OnError()
+        protected static void TestOnError(ISubject<int> subject)
         {
             var onNext = new List<int>();
             var exceptions = new List<Exception>();
             var onCompletedCallCount = 0;
-            var subject = new Subject<int>();
             
             subject.Subscribe(x => onNext.Add(x), x => exceptions.Add(x), () => onCompletedCallCount++);
             
             subject.OnNext(1);
             subject.OnNext(10);
             subject.OnNext(100);
-            Assert.That(onNext, Is.EqualTo(new List<int>{0,10,100}));
+            Assert.That(onNext, Is.EqualTo(new List<int>{1,10,100}));
             Assert.That(exceptions, Has.Count.EqualTo(0));
             Assert.That(onCompletedCallCount, Is.EqualTo(0));
             
@@ -56,16 +52,14 @@ namespace Skibitsky.Urx.Tests
             subject.OnNext(1);
             subject.OnNext(10);
             subject.OnNext(200);
-            Assert.That(onNext, Is.EqualTo(new List<int>{0,10,100}));
+            Assert.That(onNext, Is.EqualTo(new List<int>{1,10,100}));
             Assert.That(onCompletedCallCount, Is.EqualTo(0));
         }
 
-        [Test]
-        public void Unsubscribe()
+        protected static void TestUnsubscribe(ISubject<int> subject)
         {
             var onNextFirst = new List<int>();
             var onNextSecond = new List<int>();
-            var subject = new Subject<int>();
 
             var subscriptionFirst = subject.Subscribe(x => onNextFirst.Add(x));
             var subscriptionSecond = subject.Subscribe(x => onNextSecond.Add(x));

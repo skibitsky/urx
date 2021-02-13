@@ -2,15 +2,13 @@ using System;
 
 namespace Skibitsky.Urx
 {
-    public sealed class Subject<T> : ISubject<T>
+    public sealed class Subject<T> : SubjectBase<T>
     {
         private Subscription[] _subscriptions = Array.Empty<Subscription>();
-        private bool _disposed;
-        private bool _terminated;
-        
+
         private readonly object _locker = new object();
         
-        public void OnCompleted()
+        public override void OnCompleted()
         {
             ThrowIfDisposed();
             
@@ -19,11 +17,11 @@ namespace Skibitsky.Urx
                 foreach (var subscription in _subscriptions)
                     subscription.Observer.OnCompleted();
                 
-                _terminated = true;
+                Terminated = true;
             }
         }
 
-        public void OnError(Exception error)
+        public override void OnError(Exception error)
         {
             if (error == null) throw new ArgumentNullException(nameof(error));
             
@@ -34,22 +32,22 @@ namespace Skibitsky.Urx
                 foreach (var subscription in _subscriptions)
                     subscription.Observer.OnError(error);
                 
-                _terminated = true;
+                Terminated = true;
             }
         }
 
-        public void OnNext(T value)
+        public override void OnNext(T value)
         {
             lock (_locker)
             {
-                if (_terminated) return;
+                if (Terminated) return;
                 
                 for (var i = 0; i < _subscriptions.Length; i++)
                     _subscriptions[i].Observer.OnNext(value);
             }
         }
 
-        public IDisposable Subscribe(IObserver<T> observer)
+        public override IDisposable Subscribe(IObserver<T> observer)
         {
             if (observer == null) throw new ArgumentNullException(nameof(observer));
 
@@ -71,7 +69,7 @@ namespace Skibitsky.Urx
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             lock (_locker)
             {
@@ -79,16 +77,11 @@ namespace Skibitsky.Urx
                     subscription.Dispose();
                 
                 _subscriptions = null;
-                _disposed = true;
+                Disposed = true;
             }
         }
 
-        private void ThrowIfDisposed()
-        {
-            if (_disposed) throw new ObjectDisposedException(nameof(Subject<T>));
-        }
-
-        private void Unsubscribe(Subscription subscription)
+        internal override void Unsubscribe(Subscription subscription)
         {
             lock (_locker)
             {
@@ -108,31 +101,6 @@ namespace Skibitsky.Urx
                 }
                 
                 _subscriptions = newArray;
-            }
-        }
-
-        private sealed class Subscription : IDisposable
-        {
-            private Subject<T> _subject;
-            private readonly object _locker = new object();
-            
-            public IObserver<T> Observer { get; private set; }
-
-            public Subscription(Subject<T> subject, IObserver<T> observer)
-            {
-                _subject = subject;
-                Observer = observer;
-            }
-
-            public void Dispose()
-            {
-                _subject.Unsubscribe(this);
-                
-                lock (_locker)
-                {
-                    Observer = null;
-                    _subject = null;
-                }
             }
         }
     }
