@@ -7,6 +7,7 @@ namespace Skibitsky.Urx.Tests
     public class BehaviourSubjectTests : SubjectTestBase
     {
         [Test] public void SubscribeToCompleted() => TestSubscribeToCompleted(new BehaviorSubject<int>(7));
+        [Test] public void SubscribeToErrored() => TestSubscribeToErrored(new BehaviorSubject<int>(7));
         
         [Test]
         public void OnCompleted()

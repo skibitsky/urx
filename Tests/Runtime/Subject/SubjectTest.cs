@@ -8,5 +8,6 @@ namespace Skibitsky.Urx.Tests
         [Test] public void OnError() => TestOnError(new Subject<int>());
         [Test] public void Unsubscribe() => TestUnsubscribe(new Subject<int>());
         [Test] public void SubscribeToCompleted() => TestSubscribeToCompleted(new Subject<int>());
+        [Test] public void SubscribeToErrored() => TestSubscribeToErrored(new Subject<int>());
     }
 }
