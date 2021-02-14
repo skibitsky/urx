@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Skibitsky.Urx.Subjects;
 
 namespace Skibitsky.Urx.Tests
 {

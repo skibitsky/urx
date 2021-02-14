@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Skibitsky.Urx.Subjects;
 
 namespace Skibitsky.Urx.Tests
 {

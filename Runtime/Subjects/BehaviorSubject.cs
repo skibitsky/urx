@@ -1,6 +1,6 @@
 using System;
 
-namespace Skibitsky.Urx
+namespace Skibitsky.Urx.Subjects
 {
     public class BehaviorSubject<T> : SubjectBase<T>
     {

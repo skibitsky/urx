@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Skibitsky.Urx
+namespace Skibitsky.Urx.Subjects
 {
     public class ReplaySubject<T> : SubjectBase<T>
     {
