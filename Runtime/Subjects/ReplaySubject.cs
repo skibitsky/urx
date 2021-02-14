@@ -44,10 +44,12 @@ namespace Skibitsky.Urx
         }
 
         public override void OnCompleted() => _subject.OnCompleted();
+        
         public override void OnError(Exception error) => _subject.OnError(error);
+        
         public override void OnNext(T value)
         {
-            if (_subject.Terminated) return;
+            if (_subject.IsCompleted) return;
             
             _add(value);
             _trim?.Invoke();
@@ -58,11 +60,12 @@ namespace Skibitsky.Urx
         public override IDisposable Subscribe(IObserver<T> observer)
         {
             var disposable = _subject.Subscribe(observer);
-            _replay(observer);
+            if (!_subject.IsCompleted) _replay(observer);
             return disposable;
         }
 
         public override void Dispose() => _subject.Dispose();
+        
         internal override void Unsubscribe(Subscription subscription) => _subject.Unsubscribe(subscription);
 
         private sealed class ReplayMany
@@ -126,8 +129,8 @@ namespace Skibitsky.Urx
 
             public void Replay(IObserver<T> observer)
             {
-                foreach (var item in _list)
-                    observer.OnNext(item);
+                for (var i = 0; i < _list.Count; i++)
+                    observer.OnNext(_list[i]);
             }
         }
     }

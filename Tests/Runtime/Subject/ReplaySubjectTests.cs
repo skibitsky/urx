@@ -20,6 +20,11 @@ namespace Skibitsky.Urx.Tests
         [TestCase(3)]
         [TestCase(int.MaxValue)]
         public void Unsubscribe(int bufferSize) => TestUnsubscribe(new ReplaySubject<int>(bufferSize));
+        
+        [TestCase(1)]
+        [TestCase(3)]
+        [TestCase(int.MaxValue)]
+        public void SubscribeToCompleted(int bufferSize) => TestSubscribeToCompleted(new ReplaySubject<int>(bufferSize));
 
         [Test]
         public void ReplayOnce()

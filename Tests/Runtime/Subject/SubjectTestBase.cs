@@ -77,5 +77,22 @@ namespace Skibitsky.Urx.Tests
             Assert.That(onNextFirst, Is.EqualTo(new List<int>{1,10,100,2,20,200}));
             Assert.That(onNextSecond, Is.EqualTo(new List<int>{1,10,100}));
         }
+        
+        protected static void TestSubscribeToCompleted(ISubject<int> subject)
+        {
+            var onNext = new List<int>();
+
+            subject.OnNext(1);
+            subject.OnNext(10);
+            subject.OnCompleted();
+            subject.OnNext(2);
+            subject.OnNext(20);
+            
+            subject.Subscribe(x => onNext.Add(x));
+            subject.OnNext(3);
+            subject.OnNext(30);
+            
+            Assert.That(onNext, Has.Count.EqualTo(0));
+        }
     }
 }

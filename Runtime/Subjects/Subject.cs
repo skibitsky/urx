@@ -17,7 +17,7 @@ namespace Skibitsky.Urx
                 foreach (var subscription in _subscriptions)
                     subscription.Observer.OnCompleted();
                 
-                Terminated = true;
+                IsCompleted = true;
             }
         }
 
@@ -32,7 +32,7 @@ namespace Skibitsky.Urx
                 foreach (var subscription in _subscriptions)
                     subscription.Observer.OnError(error);
                 
-                Terminated = true;
+                IsCompleted = true;
             }
         }
 
@@ -40,7 +40,7 @@ namespace Skibitsky.Urx
         {
             lock (_locker)
             {
-                if (Terminated) return;
+                if (IsCompleted) return;
                 
                 for (var i = 0; i < _subscriptions.Length; i++)
                     _subscriptions[i].Observer.OnNext(value);

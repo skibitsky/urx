@@ -5,7 +5,7 @@ namespace Skibitsky.Urx
     public abstract class SubjectBase<T> : ISubject<T>, IDisposable
     {
         public bool Disposed { get; protected set; }
-        public bool Terminated { get; protected set; }
+        public bool IsCompleted { get; protected set; }
         
         public abstract void OnCompleted();
         public abstract void OnError(Exception error);
